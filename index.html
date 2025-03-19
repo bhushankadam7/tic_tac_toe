@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw The Leafs</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            font-family: Arial, sans-serif;
+        }
+
+        #loading {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #006400;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .loader-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-top: 20px;
+        }
+
+        .clover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            font-size: 50px;
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-image {
+            width: 350px;
+            height: auto;
+        }
+
+        canvas {
+            border: 3px solid;
+            background: url('https://i.ibb.co/G4yVRCCp/cartoon-cloud-sky-background-1.jpg') no-repeat center center;
+            background-size: cover;
+        }
+        
+        #t {
+            font-size: 40px;
+            font-weight: bold;
+            color: #FFD700; 
+            text-shadow: 2px 2px 4px #004d00; 
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <h1 id="t"> Royal Leaf Town</h1>
+        <img src="https://i.ibb.co/dw3CTZm6/1742206993227.png" alt="Loading Image" class="loading-image">
+        <div class="loader-container">
+            <div class="clover">🍀</div>
+        </div>
+    </div>
+    <canvas id="c"></canvas>
+
+    <script>
+        window.onload = () => {
+            let canvas = document.getElementById("c");
+            let ctx = canvas.getContext("2d");
+            let point, live, rectX, rectY, dartX, dartY, rectSpeed, normalRectSpeed, dartSpeed, rectDirection, dartDirection, dartf, darkOL, trect, leaves;
+
+            const dartImage = new Image();
+            dartImage.src = "https://i.ibb.co/ynmT3VdG/1742049686991.png";
+            const scoreImage = new Image();
+            scoreImage.src = "https://i.ibb.co/d0Dr2fbW/1742049768797.png";
+
+            function resetGame() {
+                point = 0;
+                live = 3;
+                leaves = [];
+                initializePositions();
+                draw();
+            }
+
+            function initializePositions() {
+                canvas.width = window.innerWidth * 0.94;
+                canvas.height = window.innerHeight * 0.94;
+
+                rectX = Math.random() * (canvas.width - 80);
+                rectY = (canvas.height / 2) - 20;
+
+                dartX = Math.random() * (canvas.width - 80);
+                dartY = canvas.height / 2 - 110;
+
+                rectSpeed = Math.random() * 3 + 2;
+                normalRectSpeed = rectSpeed;
+                dartSpeed = Math.random() * 3 + 2;
+
+                rectDirection = Math.random() < 0.5 ? 1 : -1;
+                dartDirection = Math.random() < 0.5 ? 1 : -1;
+                dartf = false;
+                darkOL = false;
+                trect = false;
+                
+                setTimeout(() => document.getElementById("loading").style.display = "none", 3000);
+            }
+
+            function drawScore() {
+                let imgSize = 50;
+                ctx.drawImage(scoreImage, 10, 10, imgSize, imgSize);
+                ctx.fillStyle = "black";
+                ctx.font = "24px Arial";
+                ctx.fillText(`Score: ${point}`, imgSize + 10, 45); // Fixed template string
+            }
+
+            function drawLives() {
+                let heartSize = 40;
+                let startX = canvas.width - (heartSize * 3 + 20);
+                for (let i = 0; i < live; i++) {
+                    ctx.fillText("❤", startX + i * (heartSize + 5), 30);
+                }
+            }
+
+            function drawDart() {
+                ctx.drawImage(dartImage, dartX, dartY, 80, 80);
+            }
+
+            function drawLeaves() {
+                ctx.font = "20px Arial";
+                for (let i = 0; i < leaves.length; i++) {
+                    ctx.fillText(leaves[i].emoji, leaves[i].x, leaves[i].y);
+                    leaves[i].y += leaves[i].speed;
+                    leaves[i].x += Math.sin(leaves[i].y * 0.05) * 2;
+                    if (leaves[i].y > canvas.height) {
+                        leaves.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+
+            function spawnLeaves(x, y) {
+                for (let i = 0; i < 5; i++) {
+                    leaves.push({
+                        x: x + Math.random() * 80,
+                        y: y,
+                        speed: Math.random() * 2 + 1,
+                        emoji: Math.random() > 0.5 ? "☘" : "🍀"
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+
+                drawDart();
+                drawScore();
+                drawLives();
+                drawLeaves();
+
+                ctx.fillStyle = "red";
+                ctx.fillRect(rectX, rectY, 80, 40);
+                ctx.strokeRect(rectX, rectY, 80, 40);
+
+                rectX += rectSpeed * rectDirection;
+                dartX += dartSpeed * dartDirection;
+
+                if (rectX + 80 >= canvas.width || rectX <= 0) rectDirection *= -1;
+                if (dartX + 80 >= canvas.width || dartX <= 0) dartDirection *= -1;
+
+                if (dartf) {
+                    if (!darkOL) {
+                        dartY += 10;
+                        if (dartY + 80 >= canvas.height / 2) {
+                            dartY = canvas.height / 2 - 80;
+                            darkOL = true;
+
+                            if (dartX + 80 > rectX && dartX < rectX + 80) {
+                                point += 5;
+                                rectDirection *= -1;
+                                rectSpeed += 0.5;
+                                spawnLeaves(rectX, rectY);
+                                trect = true;
+                                setTimeout(() => rectSpeed = normalRectSpeed, 3000);
+                            } else {
+                                if (live > 0) live--;
+                                trect = false;
+                                if (live === 0) {
+                                    alert("You lost All your Hearts, Wanna Try Again?");
+                                    resetGame();
+                                    return;
+                                }
+                            }
+
+                            setTimeout(() => {
+                                let interval = setInterval(() => {
+                                    dartY -= 10;
+                                    if (dartY <= canvas.height / 2 - 110) {
+                                        dartY = canvas.height / 2 - 110;
+                                        dartf = false;
+                                        darkOL = false;
+                                        clearInterval(interval);
+                                    }
+                                }, 10);
+                            }, 100);
+                        }
+                    }
+                }
+
+                ctx.fillStyle = "black";
+                ctx.font = "20px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("Just Do It , score 500 is Not Possible Bro", canvas.width / 2, canvas.height - 20);
+                requestAnimationFrame(draw);
+            }
+
+            function handleTap() {
+                if (!dartf) {
+                    dartf = true;
+                    trect = false;
+                }
+            }
+
+            window.addEventListener("resize", initializePositions);
+            window.addEventListener("click", handleTap);
+            resetGame();
+        }
+    </script>
+</body>
+</html>
